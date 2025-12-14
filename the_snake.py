@@ -28,6 +28,10 @@ KEY_DIRECTION = {
     pg.K_DOWN: DOWN,
     pg.K_LEFT: LEFT,
     pg.K_RIGHT: RIGHT,
+    pg.K_w: UP,
+    pg.K_s: DOWN,
+    pg.K_a: LEFT,
+    pg.K_d: RIGHT,
 }
 # Цвета
 BOARD_BACKGROUND_COLOR = (220, 220, 220)
@@ -83,8 +87,7 @@ class Apple(GameObject):
 
     def randomize_position(self, occupied_positions):
         """Размещает яблоко в случайной позиции на поле."""
-        free_cells = ALL_CELLS - set(occupied_positions)
-        self.position = choice(tuple(free_cells))
+        self.position = choice(tuple(ALL_CELLS - set(occupied_positions)))
 
     def draw(self):
         """Отрисовывает яблоко на экране."""
@@ -109,11 +112,10 @@ class Snake(GameObject):
         dx, dy = self.direction
 
         # Обработка выхода за границы (проход через стены)
-        new_head = (
+        self.positions.insert(0, (
             (head_x + dx * GRID_SIZE) % SCREEN_WIDTH,
             (head_y + dy * GRID_SIZE) % SCREEN_HEIGHT
-        )
-        self.positions.insert(0, new_head)
+        ))
         # Удаляем последний сегмент и затираем его на экране
         if len(self.positions) > self.length:
             self.last = self.positions.pop()
