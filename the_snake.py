@@ -69,12 +69,21 @@ class GameObject:
             f'Метод draw() не реализован в классе {type(self).__name__}'
         )
 
-    def draw_cell(self, position, color=None):
+    def draw_cell(self, position, color=None, border_color=BORDER_COLOR):
         """Отрисовывает одну ячейку (сегмент) на поверхности."""
         draw_color = color or self.body_color
         rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(screen, draw_color, rect)
-        pg.draw.rect(screen, BORDER_COLOR, rect, 1)
+        if border_color is not None:
+            pg.draw.rect(screen, border_color, rect, 1)
+
+    def clear_cell(self, position):
+        """Стираем одну ячейку (сегмент)."""
+        self.draw_cell(
+            position,
+            color=BOARD_BACKGROUND_COLOR,
+            border_color=None
+        )
 
 
 class Apple(GameObject):
@@ -116,7 +125,7 @@ class Snake(GameObject):
             (head_x + dx * GRID_SIZE) % SCREEN_WIDTH,
             (head_y + dy * GRID_SIZE) % SCREEN_HEIGHT
         ))
-        # Удаляем последний сегмент и затираем его на экране
+        # Удаляем последний сегмент и запоминаем его позицию в self.last
         if len(self.positions) > self.length:
             self.last = self.positions.pop()
         else:
@@ -124,8 +133,10 @@ class Snake(GameObject):
 
     def draw(self):
         """Отрисовывает змейку на поверхности."""
-        for position in self.positions:
-            self.draw_cell(position)
+        # Стираем старую позицию хвоста, если она есть
+        if self.last:
+            self.clear_cell(self.last)
+            self.last = None
 
         # Отрисовываем только голову (она всегда новая)
         self.draw_cell(self.get_head_position())
@@ -163,6 +174,8 @@ def main():
     snake = Snake()
     apple = Apple(occupied_positions=snake.positions)
 
+    screen.fill(BOARD_BACKGROUND_COLOR)
+
     while True:
         clock.tick(SPEED)
         handle_keys(snake)
@@ -176,11 +189,11 @@ def main():
             apple.randomize_position(snake.positions)
         # Проверка самостолкновения (пропускаем первые 4 сегмента - шею)
         elif head_pos in snake.positions[4:]:
+            # Отрисовка объектов
+            screen.fill(BOARD_BACKGROUND_COLOR)
             snake.reset()
             apple.randomize_position(snake.positions)
 
-        # Отрисовка объектов
-        screen.fill(BOARD_BACKGROUND_COLOR)
         snake.draw()
         apple.draw()
 
